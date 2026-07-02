@@ -1,0 +1,558 @@
+<!DOCTYPE html>
+<html lang="es-MX">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+  <title>Intérprete iOS - Estudio DWE</title>
+  <style>
+    :root {
+      --bg: #f4f7f9;
+      --card: #ffffff;
+      --text: #17212b;
+      --muted: #5f6b76;
+      --brand: #0b5f7a;
+      --brand2: #0f7898;
+      --border: #d9e2e7;
+      --danger: #9b1c1c;
+    }
+
+    * { box-sizing: border-box; }
+
+    body {
+      margin: 0;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Arial, sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      line-height: 1.45;
+    }
+
+    header {
+      background: linear-gradient(135deg, var(--brand), var(--brand2));
+      color: white;
+      padding: 22px 16px 26px;
+      text-align: center;
+    }
+
+    header h1 {
+      margin: 0;
+      font-size: 22px;
+      font-weight: 700;
+    }
+
+    header p {
+      margin: 8px auto 0;
+      max-width: 680px;
+      font-size: 14px;
+      opacity: .95;
+    }
+
+    main {
+      width: min(980px, 100%);
+      margin: -16px auto 40px;
+      padding: 0 12px;
+    }
+
+    .card {
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: 16px;
+      box-shadow: 0 8px 24px rgba(15, 35, 48, .08);
+      padding: 16px;
+      margin-bottom: 14px;
+    }
+
+    .uploadBox {
+      text-align: center;
+      padding: 20px 14px;
+    }
+
+    .uploadLabel {
+      display: inline-block;
+      width: 100%;
+      max-width: 420px;
+      padding: 18px 16px;
+      border-radius: 14px;
+      background: var(--brand);
+      color: white;
+      font-size: 18px;
+      font-weight: 700;
+      cursor: pointer;
+      user-select: none;
+    }
+
+    input[type="file"] {
+      position: absolute;
+      opacity: 0;
+      pointer-events: none;
+      width: 1px;
+      height: 1px;
+    }
+
+    .hint {
+      color: var(--muted);
+      font-size: 13px;
+      margin-top: 12px;
+    }
+
+    .privacy {
+      background: #eef8fb;
+      border: 1px solid #c6e4ed;
+      color: #164252;
+      border-radius: 12px;
+      padding: 12px;
+      font-size: 14px;
+      margin-top: 14px;
+    }
+
+    .error {
+      display: none;
+      color: var(--danger);
+      background: #fff0f0;
+      border: 1px solid #f1b6b6;
+      border-radius: 12px;
+      padding: 12px;
+      margin-top: 12px;
+      text-align: left;
+      white-space: pre-wrap;
+    }
+
+    .hidden { display: none; }
+
+    .topbar {
+      display: flex;
+      gap: 10px;
+      justify-content: space-between;
+      align-items: center;
+      flex-wrap: wrap;
+    }
+
+    .btn {
+      border: 1px solid var(--border);
+      background: #fff;
+      color: var(--brand);
+      border-radius: 10px;
+      padding: 10px 12px;
+      font-weight: 700;
+      cursor: pointer;
+      font-size: 14px;
+    }
+
+    h2 {
+      font-size: 18px;
+      margin: 0 0 12px;
+      color: var(--brand);
+    }
+
+    .grid {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 10px;
+    }
+
+    .field {
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 10px;
+      background: #fbfdfe;
+      min-height: 60px;
+    }
+
+    .label {
+      color: var(--muted);
+      font-size: 12px;
+      margin-bottom: 3px;
+    }
+
+    .value {
+      font-size: 15px;
+      font-weight: 650;
+      overflow-wrap: anywhere;
+    }
+
+    .reportText {
+      white-space: pre-wrap;
+      background: #fbfdfe;
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 14px;
+      font-size: 15px;
+    }
+
+    .images {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(230px, 1fr));
+      gap: 12px;
+    }
+
+    .imgCard {
+      border: 1px solid var(--border);
+      border-radius: 14px;
+      overflow: hidden;
+      background: #111;
+    }
+
+    .imgCard img {
+      display: block;
+      width: 100%;
+      height: 260px;
+      object-fit: contain;
+      background: #111;
+    }
+
+    .imgCaption {
+      background: white;
+      color: var(--text);
+      padding: 9px 10px;
+      font-size: 13px;
+      border-top: 1px solid var(--border);
+    }
+
+    dialog {
+      width: 100vw;
+      height: 100vh;
+      max-width: none;
+      max-height: none;
+      margin: 0;
+      padding: 0;
+      border: none;
+      background: #000;
+    }
+
+    dialog::backdrop { background: #000; }
+
+    .viewer {
+      position: fixed;
+      inset: 0;
+      display: flex;
+      flex-direction: column;
+      background: #000;
+    }
+
+    .viewerTop {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 8px;
+      padding: calc(10px + env(safe-area-inset-top)) 10px 10px;
+      color: white;
+      background: rgba(0,0,0,.86);
+    }
+
+    .viewerTop button {
+      background: #222;
+      color: white;
+      border: 1px solid #555;
+      border-radius: 10px;
+      padding: 10px 12px;
+      font-weight: 700;
+    }
+
+    .viewerTitle {
+      font-size: 13px;
+      color: #ddd;
+      text-align: center;
+      flex: 1;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+
+    .viewerBody {
+      flex: 1;
+      overflow: auto;
+      display: grid;
+      place-items: center;
+      touch-action: pan-x pan-y;
+    }
+
+    .viewerBody img {
+      max-width: none;
+      max-height: none;
+      width: 100%;
+      height: auto;
+      transform-origin: center center;
+    }
+
+    .viewerControls {
+      display: flex;
+      gap: 8px;
+      justify-content: center;
+      padding: 10px 10px calc(10px + env(safe-area-inset-bottom));
+      background: rgba(0,0,0,.86);
+    }
+
+    .viewerControls button {
+      min-width: 54px;
+      background: #222;
+      color: white;
+      border: 1px solid #555;
+      border-radius: 10px;
+      padding: 11px 12px;
+      font-weight: 700;
+    }
+
+    @media (max-width: 640px) {
+      header h1 { font-size: 20px; }
+      .grid { grid-template-columns: 1fr; }
+      .card { border-radius: 14px; padding: 14px; }
+      .images { grid-template-columns: 1fr; }
+      .imgCard img { height: 300px; }
+    }
+
+    @media print {
+      .uploadBox, .topbar .btn, header, dialog { display: none !important; }
+      main { margin: 0; padding: 0; width: 100%; }
+      .card { box-shadow: none; break-inside: avoid; }
+      body { background: white; }
+    }
+  </style>
+</head>
+<body>
+  <header>
+    <h1>Intérprete iOS de estudio</h1>
+    <p>Abra esta página desde Safari o Chrome en iPhone y cargue el archivo JSON del estudio.</p>
+  </header>
+
+  <main>
+    <section class="card uploadBox">
+      <label class="uploadLabel" for="jsonFile">Cargar estudio JSON</label>
+      <input id="jsonFile" type="file" accept=".json,application/json" />
+      <div class="hint">En iPhone toque el botón, elija “Explorar” o “Archivos” y seleccione el JSON.</div>
+      <div class="privacy">El archivo se procesa únicamente dentro de este navegador. No se sube a internet ni se guarda en servidores.</div>
+      <div id="error" class="error"></div>
+    </section>
+
+    <section id="result" class="hidden">
+      <div class="card topbar">
+        <div>
+          <h2 id="studyTitle" style="margin-bottom: 2px;">Estudio cargado</h2>
+          <div id="fileName" class="hint" style="margin-top:0;"></div>
+        </div>
+        <button class="btn" onclick="window.print()">Imprimir / PDF</button>
+      </div>
+
+      <section class="card">
+        <h2>Datos del paciente</h2>
+        <div id="patientGrid" class="grid"></div>
+      </section>
+
+      <section class="card">
+        <h2>Interpretación</h2>
+        <div id="report" class="reportText">Sin interpretación.</div>
+      </section>
+
+      <section class="card">
+        <h2>Imágenes</h2>
+        <div id="images" class="images"></div>
+      </section>
+    </section>
+  </main>
+
+  <dialog id="viewerDialog">
+    <div class="viewer">
+      <div class="viewerTop">
+        <button id="prevBtn">‹</button>
+        <div id="viewerTitle" class="viewerTitle"></div>
+        <button id="closeBtn">Cerrar</button>
+      </div>
+      <div id="viewerBody" class="viewerBody">
+        <img id="viewerImg" alt="Imagen del estudio" />
+      </div>
+      <div class="viewerControls">
+        <button id="zoomOut">−</button>
+        <button id="zoomReset">100%</button>
+        <button id="zoomIn">+</button>
+        <button id="nextBtn">›</button>
+      </div>
+    </div>
+  </dialog>
+
+  <script>
+    const fileInput = document.getElementById('jsonFile');
+    const errorBox = document.getElementById('error');
+    const result = document.getElementById('result');
+    const patientGrid = document.getElementById('patientGrid');
+    const report = document.getElementById('report');
+    const imagesBox = document.getElementById('images');
+    const studyTitle = document.getElementById('studyTitle');
+    const fileNameBox = document.getElementById('fileName');
+
+    const viewerDialog = document.getElementById('viewerDialog');
+    const viewerImg = document.getElementById('viewerImg');
+    const viewerTitle = document.getElementById('viewerTitle');
+    const viewerBody = document.getElementById('viewerBody');
+
+    let loadedImages = [];
+    let currentIndex = 0;
+    let zoom = 1;
+
+    fileInput.addEventListener('change', async (event) => {
+      const file = event.target.files && event.target.files[0];
+      if (!file) return;
+
+      hideError();
+      try {
+        const text = await file.text();
+        const data = JSON.parse(text);
+        renderStudy(data, file.name);
+      } catch (err) {
+        showError('No pude leer el JSON. Verifica que sea un archivo .json válido.\n\nDetalle: ' + err.message);
+      }
+    });
+
+    function renderStudy(data, name) {
+      patientGrid.innerHTML = '';
+      imagesBox.innerHTML = '';
+      loadedImages = [];
+
+      const patient = data.patient || data.paciente || data.datosPaciente || data.datos || {};
+      const interpretation = data.interpretation || data.interpretacion || data.reporte || data.report || data.texto || '';
+      const title = data.title || data.titulo || patient.nombre || patient.name || 'Estudio cargado';
+
+      studyTitle.textContent = title;
+      fileNameBox.textContent = name || '';
+
+      const fields = normalizePatientFields(patient, data);
+      fields.forEach(([label, value]) => addField(label, value));
+
+      report.textContent = interpretation || 'Sin interpretación.';
+
+      loadedImages = normalizeImages(data);
+      if (loadedImages.length === 0) {
+        imagesBox.innerHTML = '<div class="hint">Este JSON no contiene imágenes reconocibles.</div>';
+      } else {
+        loadedImages.forEach((img, index) => addImageCard(img, index));
+      }
+
+      result.classList.remove('hidden');
+      result.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    }
+
+    function normalizePatientFields(patient, data) {
+      const source = { ...patient };
+      if (!Object.keys(source).length) {
+        ['nombre','name','patientName','id','patientId','edad','age','sexo','sex','fecha','studyDate','fechaEstudio'].forEach(k => {
+          if (data[k]) source[k] = data[k];
+        });
+      }
+
+      const preferred = [
+        ['Nombre', source.nombre || source.name || source.patientName || source.PatientName],
+        ['ID', source.id || source.patientId || source.PatientID],
+        ['Edad', source.edad || source.age || source.PatientAge],
+        ['Sexo', source.sexo || source.sex || source.PatientSex],
+        ['Fecha del estudio', source.fechaEstudio || source.studyDate || source.fecha || source.StudyDate],
+        ['Fecha de nacimiento', source.fechaNacimiento || source.birthDate || source.PatientBirthDate]
+      ].filter(x => x[1]);
+
+      const usedKeys = new Set(['nombre','name','patientName','PatientName','id','patientId','PatientID','edad','age','PatientAge','sexo','sex','PatientSex','fechaEstudio','studyDate','fecha','StudyDate','fechaNacimiento','birthDate','PatientBirthDate']);
+      Object.keys(source).forEach(k => {
+        if (!usedKeys.has(k) && source[k] !== undefined && source[k] !== null && source[k] !== '') {
+          preferred.push([prettyKey(k), String(source[k])]);
+        }
+      });
+      return preferred.length ? preferred : [['Estado', 'JSON cargado correctamente']];
+    }
+
+    function normalizeImages(data) {
+      const raw = data.images || data.imagenes || data.estudioImagenes || data.series || [];
+      const arr = Array.isArray(raw) ? raw : Object.values(raw || {});
+      return arr.map((item, i) => {
+        if (typeof item === 'string') {
+          return { src: ensureDataUrl(item), caption: 'Imagen ' + (i + 1) };
+        }
+        const src = item.src || item.data || item.base64 || item.imagen || item.image || item.url || '';
+        return {
+          src: ensureDataUrl(src, item.mime || item.type),
+          caption: item.caption || item.nombre || item.name || item.label || item.descripcion || ('Imagen ' + (i + 1))
+        };
+      }).filter(x => x.src);
+    }
+
+    function ensureDataUrl(value, mime) {
+      if (!value) return '';
+      const v = String(value).trim();
+      if (v.startsWith('data:image/')) return v;
+      if (v.startsWith('http://') || v.startsWith('https://')) return v;
+      const guessed = mime || (v.startsWith('/9j/') ? 'image/jpeg' : 'image/png');
+      return 'data:' + guessed + ';base64,' + v;
+    }
+
+    function addField(label, value) {
+      const div = document.createElement('div');
+      div.className = 'field';
+      div.innerHTML = '<div class="label"></div><div class="value"></div>';
+      div.querySelector('.label').textContent = label;
+      div.querySelector('.value').textContent = value;
+      patientGrid.appendChild(div);
+    }
+
+    function addImageCard(img, index) {
+      const card = document.createElement('div');
+      card.className = 'imgCard';
+
+      const image = document.createElement('img');
+      image.src = img.src;
+      image.alt = img.caption || 'Imagen del estudio';
+      image.loading = 'lazy';
+      image.addEventListener('click', () => openViewer(index));
+      image.addEventListener('dblclick', () => openViewer(index));
+
+      const cap = document.createElement('div');
+      cap.className = 'imgCaption';
+      cap.textContent = img.caption || ('Imagen ' + (index + 1));
+
+      card.appendChild(image);
+      card.appendChild(cap);
+      imagesBox.appendChild(card);
+    }
+
+    function openViewer(index) {
+      currentIndex = index;
+      zoom = 1;
+      updateViewer();
+      if (viewerDialog.showModal) viewerDialog.showModal();
+      else viewerDialog.setAttribute('open', 'open');
+    }
+
+    function updateViewer() {
+      const img = loadedImages[currentIndex];
+      if (!img) return;
+      viewerImg.src = img.src;
+      viewerTitle.textContent = (currentIndex + 1) + ' / ' + loadedImages.length + ' · ' + (img.caption || 'Imagen');
+      viewerImg.style.transform = 'scale(' + zoom + ')';
+      viewerBody.scrollTop = 0;
+      viewerBody.scrollLeft = 0;
+    }
+
+    document.getElementById('closeBtn').onclick = () => viewerDialog.close ? viewerDialog.close() : viewerDialog.removeAttribute('open');
+    document.getElementById('prevBtn').onclick = () => { currentIndex = (currentIndex - 1 + loadedImages.length) % loadedImages.length; zoom = 1; updateViewer(); };
+    document.getElementById('nextBtn').onclick = () => { currentIndex = (currentIndex + 1) % loadedImages.length; zoom = 1; updateViewer(); };
+    document.getElementById('zoomIn').onclick = () => { zoom = Math.min(zoom + 0.25, 5); updateZoomOnly(); };
+    document.getElementById('zoomOut').onclick = () => { zoom = Math.max(zoom - 0.25, 0.5); updateZoomOnly(); };
+    document.getElementById('zoomReset').onclick = () => { zoom = 1; updateZoomOnly(); };
+
+    function updateZoomOnly() {
+      viewerImg.style.transform = 'scale(' + zoom + ')';
+      document.getElementById('zoomReset').textContent = Math.round(zoom * 100) + '%';
+    }
+
+    function prettyKey(key) {
+      return String(key)
+        .replace(/_/g, ' ')
+        .replace(/([a-z])([A-Z])/g, '$1 $2')
+        .replace(/^./, c => c.toUpperCase());
+    }
+
+    function showError(msg) {
+      errorBox.textContent = msg;
+      errorBox.style.display = 'block';
+    }
+
+    function hideError() {
+      errorBox.textContent = '';
+      errorBox.style.display = 'none';
+    }
+  </script>
+</body>
+</html>
